@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Building That Never Sleeps: A Pillar Family Story</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-navy:#1B2430;
+    --navy-deep:#141B24;
+    --cream:#F6F0E4;
+    --ember:#E8783D;
+    --ember-dark:#C85A22;
+    --teal:#3FA7A0;
+    --amber:#F4B942;
+    --stone:#8C9199;
+    --stone-dark:#565B62;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--navy-deep);
+    font-family:'Nunito',sans-serif;
+    color:var(--ink-navy);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height:100vh;
+    padding:24px 12px 40px;
+  }
+  .book{
+    width:100%;
+    max-width:920px;
+    background:var(--cream);
+    border-radius:20px;
+    box-shadow:0 30px 60px rgba(0,0,0,0.5);
+    overflow:hidden;
+    position:relative;
+  }
+  .rack-label{
+    position:absolute;
+    top:16px;
+    right:16px;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:0.08em;
+    background:var(--navy-deep);
+    color:var(--amber);
+    padding:6px 10px;
+    border-radius:6px;
+    z-index:5;
+  }
+  .page{
+    display:none;
+    min-height:560px;
+  }
+  .page.active{display:flex;}
+  @media (max-width:640px){
+    .page.active{flex-direction:column;}
+  }
+  .art{
+    flex:1.1;
+    background:linear-gradient(180deg,var(--ink-navy),var(--navy-deep));
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:260px;
+    overflow:hidden;
+  }
+  .text{
+    flex:1;
+    padding:36px 34px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:14px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ember-dark);
+  }
+  h1{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:2.05rem;
+    line-height:1.1;
+    margin:0;
+    color:var(--ink-navy);
+  }
+  .cover h1{font-size:2.6rem;}
+  p{
+    font-size:1.1rem;
+    line-height:1.5;
+    margin:0;
+    color:#2B3340;
+  }
+  .cover-wrap{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:40px;
+    gap:16px;
+    color:var(--cream);
+  }
+  .cover-wrap .sub{
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:1.15rem;
+    color:var(--amber);
+  }
+  .cover-wrap .tag{
+    margin-top:20px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.1em;
+    color:var(--teal);
+  }
+  .nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+    max-width:920px;
+    margin-top:18px;
+    color:var(--cream);
+  }
+  .nav button{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:1rem;
+    background:var(--ember);
+    color:var(--cream);
+    border:none;
+    padding:12px 22px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .nav button:hover{background:var(--ember-dark);}
+  .nav button:disabled{opacity:0.35;cursor:default;}
+  .dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:460px;}
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:rgba(246,240,228,0.25);
+    cursor:pointer;
+  }
+  .dot.active{background:var(--amber);}
+  .footer-note{
+    color:rgba(246,240,228,0.55);
+    font-size:12px;
+    margin-top:10px;
+    font-family:'JetBrains Mono',monospace;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<div class="book" id="book"></div>
+<div class="nav">
+  <button id="prevBtn">&larr; Back</button>
+  <div class="dots" id="dots"></div>
+  <button id="nextBtn">Next &rarr;</button>
+</div>
+<div class="footer-note">PillarSite Strategies &mdash; The PillarPoint Brief for Kids</div>
+
+<script>
+function shade(hex, pct){
+  hex = hex.replace('#','');
+  let r = parseInt(hex.substring(0,2),16);
+  let g = parseInt(hex.substring(2,4),16);
+  let b = parseInt(hex.substring(4,6),16);
+  r = Math.min(255,Math.max(0,Math.round(r*(1+pct))));
+  g = Math.min(255,Math.max(0,Math.round(g*(1+pct))));
+  b = Math.min(255,Math.max(0,Math.round(b*(1+pct))));
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+// ---- Revised Engine: Playful, Non-Pasta Elephant Trunk with Folds ----
+function elephant(x, y, scale, flip, bodyColor) {
+  const darkColor = shade(bodyColor, -0.3);
+  const shadowColor = shade(bodyColor, -0.45);
+  const cheekColor = "#E8783D"; 
+  const gradId = `eleGrad-${Math.random().toString(36).substr(2, 9)}`;
+
+  return `
+  <g transform="translate(${x},${y}) scale(${scale * (flip ? -1 : 1)}, ${scale})">
+    <defs>
+      <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${bodyColor}" />
+        <stop offset="100%" stop-color="${darkColor}" />
+      </linearGradient>
+    </defs>
+    <!-- Ground shadow -->
+    <ellipse cx="0" cy="2" rx="46" ry="5.5" fill="${shadowColor}" opacity="0.35"/>
+    <!-- Legs -->
+    <rect x="-36" y="-54" width="15" height="54" rx="7" fill="${darkColor}"/>
+    <rect x="16" y="-51" width="15" height="51" rx="7" fill="${darkColor}"/>
+    <rect x="-24" y="-56" width="17" height="56" rx="8" fill="url(#${gradId})"/>
+    <rect x="2" y="-54" width="17" height="54" rx="8" fill="url(#${gradId})"/>
+    <!-- Body -->
+    <ellipse cx="-10" cy="-78" rx="52" ry="36" fill="url(#${gradId})"/>
+    <!-- Ear -->
+    <path d="M 12 -138 C -14 -128 -16 -90 12 -68 C 32 -66 44 -84 40 -108 Z" fill="url(#${gradId})"/>
+    <path d="M 10 -128 C -8 -120 -10 -96 10 -78 Z" fill="${darkColor}" opacity="0.25"/>
+    <!-- Head -->
+    <circle cx="54" cy="-110" r="30" fill="url(#${gradId})"/>
+    <ellipse cx="58" cy="-96" rx="6" ry="3.5" fill="${cheekColor}" opacity="0.3"/> 
+    
+    <!-- Tapered, Expressive, Curled Trunk (No Pasta!) -->
+    <g>
+      <!-- Main Tapered Trunk Core -->
+      <path d="M 72 -108 
+               C 96 -112, 114 -94, 106 -72 
+               C 98 -54, 76 -48, 76 -32 
+               C 76 -20, 84 -12, 94 -12 
+               C 102 -12, 104 -20, 98 -22
+               C 92 -24, 88 -18, 88 -24
+               C 88 -36, 108 -44, 116 -66
+               C 126 -96, 104 -124, 70 -118 Z" 
+            fill="url(#${gradId})"/>
+      
+      <!-- Inner Dynamic Shadow for Depth -->
+      <path d="M 76 -106 C 94 -108, 108 -92, 102 -74 C 94 -58, 78 -52, 78 -32 C 78 -24, 84 -16, 92 -14" 
+            stroke="${darkColor}" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.4"/>
+            
+      <!-- Cute Character Trunk Wrinkles/Folds -->
+      <path d="M 84 -100 Q 88 -96 82 -92" stroke="${darkColor}" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.4"/>
+      <path d="M 91 -88 Q 95 -84 89 -80" stroke="${darkColor}" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.4"/>
+      <path d="M 92 -74 Q 95 -70 89 -67" stroke="${darkColor}" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.4"/>
+    </g>
+
+    <!-- Tusk -->
+    <path d="M 72 -94 C 82 -92 86 -84 80 -80 C 74 -84 70 -92 72 -94 Z" fill="#FFFDF9"/>
+    <!-- Eyes -->
+    <g transform="translate(60, -118)">
+      <ellipse cx="0" cy="0" rx="6.5" ry="8.5" fill="#FFFFFF"/>
+      <ellipse cx="1.5" cy="0" rx="4" ry="5.5" fill="#1B2430"/>
+      <circle cx="0" cy="-2.5" r="1.8" fill="#FFFFFF"/>
+      <path d="M -7 -10 Q 0 -13 5 -9" stroke="#1B2430" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>`;
+}
+
+const server = (x, y, w, h, lit) => `
+<g transform="translate(${x},${y})">
+  <rect x="1" y="1" width="${w}" height="${h}" rx="5" fill="#090D12" />
+  <rect width="${w}" height="${h}" rx="5" fill="#1E2631" stroke="#2C3746" stroke-width="1"/>
+  <rect x="3" y="3" width="${w-6}" height="${h-6}" rx="3" fill="#11161D" />
+  ${[0,1,2,3,4].map(i => {
+    const slotY = 6 + i * (h - 16) / 5;
+    return `
+      <rect x="6" y="${slotY}" width="${w-12}" height="6" rx="2" fill="#1A212A"/>
+      <circle cx="${w-12}" cy="${slotY+3}" r="1.5" fill="${lit ? (i % 2 === 0 ? '#3FA7A0' : '#F4B942') : '#2C3541'}"/>
+    `;
+  }).join('')}
+</g>`;
+
+const serverRow = (x,y,count,lit) => Array.from({length:count}).map((_,i)=>server(x+i*46,y,36,110,lit)).join('');
+const bolt = (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})"><path d="M10 0 L0 22 L8 22 L4 40 L22 14 L13 14 Z" fill="#F4B942"/></g>`;
+const droplet = (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})"><path d="M12 0 C12 0 24 16 24 26 A12 12 0 1 1 0 26 C0 16 12 0 12 0 Z" fill="#3FA7A0"/><path d="M6 22 C3 18 5 12 8 8" stroke="#FFF" stroke-width="1.5" fill="none" opacity="0.3"/></g>`;
+const cableLine = (x1,y1,x2,y2) => `<path d="M${x1} ${y1} Q ${(x1+x2)/2} ${y1-30}, ${x2} ${y2}" stroke="#F4B942" stroke-width="3" fill="none" stroke-dasharray="2 6"/>`;
+const sun = (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})"><circle cx="0" cy="0" r="14" fill="#F4B942"/>${[0, 45, 90, 135, 180, 225, 270, 315].map(a => `<line x1="${(17*Math.cos(a*Math.PI/180)).toFixed(1)}" y1="${(17*Math.sin(a*Math.PI/180)).toFixed(1)}" x2="${(25*Math.cos(a*Math.PI/180)).toFixed(1)}" y2="${(25*Math.sin(a*Math.PI/180)).toFixed(1)}" stroke="#F4B942" stroke-width="3" stroke-linecap="round"/>`).join('')}</g>`;
+const solarPanel = (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})"><rect x="0" y="0" width="64" height="38" rx="3" fill="#1B2B3A" stroke="#3FA7A0" stroke-width="1.5"/><line x1="16" y1="0" x2="16" y2="38" stroke="#2C445C"/><line x1="32" y1="0" x2="32" y2="38" stroke="#2C445C"/><line x1="0" y1="19" x2="64" y2="19" stroke="#2C445C"/><path d="M26 38 L22 46 L42 46 L38 38 Z" fill="#3A424D"/></g>`;
+const loopIcon = (x,y,s) => `<g transform="translate(${x},${y}) scale(${s})"><circle cx="0" cy="0" r="20" fill="none" stroke="#3FA7A0" stroke-width="4.5" stroke-dasharray="80 25" stroke-linecap="round"/><path d="M 16 -10 L 25 -10 L 20 -1 Z" fill="#3FA7A0"/></g>`;
+const leaf = (x,y,s) => `<g transform="translate(${x},${y}) scale(${s})"><path d="M0 24 C -18 20 -20 -4 0 -20 C 20 -4 18 20 0 24 Z" fill="#3FA7A0"/><line x1="0" y1="22" x2="0" y2="-16" stroke="#245a56" stroke-width="2"/></g>`;
+const houseWarm = (x,y,s) => `<g transform="translate(${x},${y}) scale(${s})"><path d="M0 30 L0 0 L24 -18 L48 0 L48 30 Z" fill="#8C9199"/><rect x="16" y="10" width="16" height="20" fill="#F4B942" opacity="0.8"/><path d="M20 -2 q2 -6 0 -12 M24 -2 q2 -8 0 -14" stroke="#E8783D" stroke-width="2" fill="none"/></g>`;
+const gradCap = (x,y,s) => `<g transform="translate(${x},${y}) scale(${s})"><polygon points="0,0 25,-10 50,0 25,10" fill="#1B2430"/><rect x="15" y="0" width="20" height="12" fill="#25303E"/><circle cx="42" cy="15" r="2.5" fill="#F4B942"/></g>`;
+
+const pages = [
+{
+  cover:true,
+  order:'ORDER 01',
+  content:`
+    <div class="cover-wrap">
+      <div class="sub">A PillarSite Strategies Story</div>
+      <h1>The Building That Never Sleeps</h1>
+      <div class="sub" style="color:var(--teal)">A Pillar Family Story</div>
+      <svg width="260" height="220" viewBox="0 0 260 220">
+        ${serverRow(6,4,5,true)}
+        ${elephant(160,205,0.72,false,'#E8783D')}
+      </svg>
+      <div class="tag">POWER &middot; FIBER &middot; WATER</div>
+    </div>`
+},
+{
+  order:'ORDER 02',
+  art:`${serverRow(24,16,3,false)}${elephant(65,325,0.45,false,'#8C9199')}${elephant(135,325,0.40,false,'#8C9199')}${elephant(205,325,0.55,true,'#8C9199')}`,
+  eyebrow:'Page 1',
+  title:'A Walk With Papa',
+  body:`Nia and Remy were walking home with their papa when they spotted a huge grey building, longer than their whole street. No windows. No doors, except one. Just a quiet, steady stillness, like the building was holding its breath.<br><br>"Papa, what is that place?" asked Nia, tracing the shape of its walls.<br>"Look how sturdy it stands," said Papa, tapping his own thick grey leg, "on legs like columns &mdash; just like us. That's a <b>data center</b>."`
+},
+{
+  order:'ORDER 03',
+  art:`${serverRow(20,20,4,true)}${elephant(130,325,0.60,false,'#8C9199')}`,
+  eyebrow:'Page 2',
+  title:'It Never Forgets',
+  body:`"You know how elephants never forget?" Papa said. "A data center doesn't forget either. Inside, thousands of busy computers called <b>servers</b> hold onto every photo, video, and message you've ever sent &mdash; so you never have to."<br><br>Remy patted his own head proudly. "I never forget where I hide my snacks."`
+},
+{
+  order:'ORDER 04',
+  art:`${bolt(120,30,2.5)}${bolt(60,110,1.8)}${bolt(180,90,2.1)}${elephant(130,325,0.62,false,'#E8783D')}`,
+  eyebrow:'Pillar One',
+  title:'It Needs Power',
+  body:`"A data center is hungry," said Papa, "but not for food &mdash; for <b>electricity</b>. It can use as much power as a whole small town, all day, every day, so it never, ever goes dark."<br><br>Remy's eyes went wide. "As much as ALL our neighbors put together?"<br>"Sometimes even more," said Papa. "But it isn't only take, take, take. Building one often means new power lines and stronger substations get built too &mdash; upgrades the whole neighborhood gets to use. And during the busiest times, some data centers even lend a hand back, drawing on their own backup batteries so there's more power to go around for everyone else."`
+},
+{
+  order:'ORDER 05',
+  art:`${cableLine(20,220,240,220)}${cableLine(20,180,240,180)}${elephant(130,325,0.62,false,'#3FA7A0')}`,
+  eyebrow:'Pillar Two',
+  title:'It Needs A Trunk Line',
+  body:`"How does my message reach Grandma so fast?" asked Nia.<br><br>"Through <b>fiber</b>," said Papa. "Long ago, telephone companies even called their biggest cables 'trunk lines' &mdash; because, believe it or not, they reminded people of ours!" Nia giggled and gave her trunk a wiggle. "Those glass threads carry light beams at incredible speed, all around the world."`
+},
+{
+  order:'ORDER 06',
+  art:`${droplet(60,30,2.2)}${droplet(150,70,1.6)}${droplet(210,40,1.2)}${elephant(130,325,0.62,false,'#F4B942')}`,
+  eyebrow:'Pillar Three',
+  title:'It Needs Water',
+  body:`"All that hard work makes the servers warm," Papa explained, "so some data centers use <b>water</b> to help them stay cool. We elephants know a thing or two about that &mdash; a good soak is the best way to beat the heat."<br><br>"Just like after our walk to the pond!" laughed Remy.`
+},
+{
+  order:'ORDER 07',
+  art:`${loopIcon(130,80,1.8)}${droplet(60,140,1.1)}${droplet(200,150,1.0)}${elephant(130,325,0.58,false,'#3FA7A0')}`,
+  eyebrow:'Staying Sustainable',
+  title:'It Learns To Reuse',
+  body:`"The water that cools the machines doesn't just disappear," said Papa. "Many data centers use <b>closed-loop cooling</b> &mdash; the water travels in a loop, cools the servers, then circles back to do it again, the same way you'd refill a water bottle instead of grabbing a new cup each time."<br><br>"Some go even further with <b>liquid cooling</b>," he added, "pumping a special fluid through sealed tubes right next to the computer chips, using barely any water at all."`
+},
+{
+  order:'ORDER 08',
+  art:`${sun(130,60,1.8)}${solarPanel(40,160,1.3)}${solarPanel(150,170,1.2)}${elephant(130,325,0.55,false,'#F4B942')}`,
+  eyebrow:'Staying Sustainable',
+  title:'It Can Run On Sunshine',
+  body:`"Data centers need so much power that many are turning to the sun for help," said Papa. "Rows of <b>solar panels</b> turn sunlight into electricity, and some data centers work with wind farms too. The more clean energy they use, the less pollution ends up in the sky we all breathe."<br><br>Nia looked up at the sun. "So the same sun that warms my ears could help power the internet?" "Exactly," said Papa.`
+},
+{
+  order:'ORDER 09',
+  art:`${elephant(55,325,0.45,false,'#3FA7A0')}${elephant(130,325,0.60,false,'#E8783D')}${elephant(205,325,0.45,true,'#F4B942')}`,
+  eyebrow:'Page 8',
+  title:'Three Strong Pillars',
+  body:`"Not every spot works," said Papa. "Builders look for a place with strong power lines nearby, fast fiber already running close by, and enough clean water. Power, fiber, and water &mdash; the <b>three pillars</b> a data center needs to stand tall." He flexed his own sturdy legs. "We know a thing or two about strong pillars, don't we?"`
+},
+{
+  order:'ORDER 0A',
+  art:`${houseWarm(20,130,1.4)}${gradCap(130,160,1.1)}${elephant(180,325,0.58,false,'#3FA7A0')}`,
+  eyebrow:'More Than A Building',
+  title:'It Gives Back, Too',
+  body:`"Building a data center creates jobs," said Papa, "for electricians, engineers, and everyday workers. Once it's running, it pays taxes that can help build schools, libraries, and roads nearby &mdash; and some even share their leftover warmth to heat greenhouses or nearby buildings, so almost nothing goes to waste."<br><br>"So it helps the whole neighborhood?" asked Remy. "When it's built the right way &mdash; yes," said Papa.`
+},
+{
+  order:'ORDER 0B',
+  art:`${serverRow(20,20,2,true)}${leaf(190,60,1.4)}${elephant(130,325,0.55,false,'#F4B942')}${elephant(205,325,0.38,false,'#3FA7A0')}`,
+  eyebrow:'Page 10',
+  title:'A Good Neighbor',
+  body:`"Do they bother anyone?" asked Nia.<br><br>"A well-planned one shouldn't," said Papa. "It stays quiet behind its fence, watches its power and water use closely, and works to be a good neighbor &mdash; if it's built the right way, in the right place."`
+},
+{
+  order:'ORDER 0C',
+  art:`${elephant(130,325,0.65,false,'#E8783D')}${bolt(180,50,1.4)}${droplet(50,50,1.4)}${sun(130,20,1.0)}`,
+  eyebrow:'The End',
+  title:'The Next Time You Send A Photo...',
+  body:`...remember the quiet grey building, the Pillar family, and everything holding it up: power, fiber, water &mdash; and the sunshine, the loops, and the neighbors that help it run responsibly.<br><br><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--teal)">Curious about a data center project near you? PillarSite Strategies helps communities and companies understand what's really being built.</span>`
+}
+];
+
+const bookEl = document.getElementById('book');
+const dotsEl = document.getElementById('dots');
+let current = 0;
+
+pages.forEach((p,i)=>{
+  const div = document.createElement('div');
+  div.className = 'page' + (i===0?' active':'');
+  if(p.cover){
+    div.innerHTML = `<div class="rack-label">${p.order}</div>${p.content}`;
+  } else {
+    div.innerHTML = `
+      <div class="rack-label">${p.order}</div>
+      <div class="art"><svg width="260" height="340" viewBox="0 0 260 340">${p.art}</svg></div>
+      <div class="text">
+        <div class="eyebrow">${p.eyebrow}</div>
+        <h1>${p.title}</h1>
+        <p>${p.body}</p>
+      </div>`;
+  }
+  bookEl.appendChild(div);
+
+  const dot = document.createElement('div');
+  dot.className = 'dot' + (i===0?' active':'');
+  dot.onclick = () => goTo(i);
+  dotsEl.appendChild(dot);
+});
+
+function goTo(i){
+  document.querySelectorAll('.page').forEach((el,idx)=>el.classList.toggle('active', idx===i));
+  document.querySelectorAll('.dot').forEach((el,idx)=>el.classList.toggle('active', idx===i));
+  current = i;
+  document.getElementById('prevBtn').disabled = i===0;
+  document.getElementById('nextBtn').disabled = i===pages.length-1;
+}
+document.getElementById('prevBtn').onclick = () => current>0 && goTo(current-1);
+document.getElementById('nextBtn').onclick = () => current<pages.length-1 && goTo(current+1);
+goTo(0);
+</script>
+</body>
+</html>
